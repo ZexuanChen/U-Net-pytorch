@@ -82,7 +82,7 @@ class UNet(nn.Module):
         return self.out(x)                                   # 输出
 
 
-# 测试
+#测试
 # model = UNet(in_channels=3, out_channels=2)
 # print(model)
 #

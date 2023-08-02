@@ -9,7 +9,7 @@ from torchvision import transforms as T  # 可以随机变换
 from torchvision.transforms import functional as F  # 变换的参数需要手动给出
 
 class MedicalDataSet(Dataset):
-    def __init__(self, names, input_shape, num_classes, train, dataset_path):
+    def __init__(self, annotation, input_shape, num_classes, train, dataset_path):
         """
         初始化数据集的基本信息
         :param names: 除去后缀的图像名称列表，如图片名为1.jpg，列表中的值就是1，也可以看成是图像的编号
@@ -20,11 +20,9 @@ class MedicalDataSet(Dataset):
         """
         super(MedicalDataSet, self).__init__()
 
-        ## name ?
-        self.names = names
-
-        ## annotation 
-        self.length = len(self.annotation_lines)  # 数据集的图像总数
+        ## 删除了name 增加了annotation
+        self.annotations=annotation
+        self.length = len(self.annotations)  # 数据集的图像总数
         self.input_shape = input_shape
         self.num_classes = num_classes
         self.train = train
@@ -45,17 +43,20 @@ class MedicalDataSet(Dataset):
         """
         name = self.annotations[index].strip()
         # 读取图像
-        input_image = Image.open(os.path.join(os.path.join(self.dataset_path, "Images"), name + ".png"))  # 原始图像
-        pre_seg_image = Image.open(os.path.join(os.path.join(self.dataset_path, "Labels"), name + ".png"))  # 原始标注图像，只有纯黑色和纯白色，0和255
+        input_image = Image.open(os.path.join(os.path.join(self.dataset_path, "Image"), name + ".bmp"))  # 原始图像
+        pre_seg_image = Image.open(os.path.join(os.path.join(self.dataset_path, "Mask"), name + ".bmp"))  # 原始标注图像，只有纯黑色和纯白色，0和255
 
-        input_image, pre_seg_image = augment(input_image, pre_seg_image, )  # 数据增强
+        input_image, pre_seg_image = augment(input_image, pre_seg_image, (512,512),work=bool(False))  # 数据增强
 
         input_image = np.array(input_image, dtype=np.float64) / 255  # 归一化到[0, 1]
         input_image = np.transpose(input_image, [2, 0, 1])  # 通道数挪到最前面
         input_image = torch.FloatTensor(input_image)  # 转为tensor
 
-        seg_image = np.zeros_like(pre_seg_image)  # 初始化一个全是背景类别的标注图像，背景类别编号为0
-        seg_image[pre_seg_image <= 127.5] = 1  # 把像素值小于等于127.5（255的一半）的点设置为需要分割的类别，编号为1
+        # seg_image = np.zeros_like(pre_seg_image)  # 初始化一个全是背景类别的标注图像，背景类别编号为0
+        #seg_image[pre_seg_image <= 127.5] = 1  # 把像素值小于等于127.5（255的一半）的点设置为需要分割的类别，编号为1
+
+        seg_image=np.array(pre_seg_image)
+        seg_image[seg_image == 255] = 1
         seg_image = np.eye(self.num_classes + 1)[seg_image.reshape([-1])]  # 得到对应的one-hot编码，shape=(w*h, num_classes+1)
         seg_image = seg_image.reshape((int(self.input_shape[0]), int(self.input_shape[1]), self.num_classes + 1))  # shape=(h, w, num_classes+1)
         seg_image = torch.LongTensor(seg_image)  # 转为tensor

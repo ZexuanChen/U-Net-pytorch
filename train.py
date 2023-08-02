@@ -16,14 +16,15 @@ dataset_path=''
 num_epochs=30
 device="cpu"
 shuffle=bool(True)
-
+path="GlandCeildata/train"
 
 if __name__ == "__main__":
 
     # out_chanels填什么？
     model = unet.UNet(3,2).train()
     #name 是什么？ path
-    dataset=dataloader.MedicalDataSet("",(512,512),2,bool(True),"")
+    annotation=[str(i) for i in range(160)]
+    dataset=dataloader.MedicalDataSet(annotation,(512,512),1,bool(True),path)
     train_loader=DataLoader(dataset,batch_size=1,shuffle=shuffle)
 
     # 预训练模块
@@ -31,12 +32,12 @@ if __name__ == "__main__":
     if load:
         model = torch.load('model.pth')
 
-    with open(os.path.join(dataset_path, "ImageSets/Segmentation/train.txt"),"r") as f:
-        train_lines = f.readlines()
-    with open(os.path.join(dataset_path, "ImageSets/Segmentation/val.txt"),"r") as f:
-        val_lines = f.readlines()
-    num_train   = len(train_lines)
-    num_val     = len(val_lines)
+    # with open(os.path.join(dataset_path, "ImageSets/Segmentation/train.txt"),"r") as f:
+    #     train_lines = f.readlines()
+    # with open(os.path.join(dataset_path, "ImageSets/Segmentation/val.txt"),"r") as f:
+    #     val_lines = f.readlines()
+    # num_train   = len(train_lines)
+    # num_val     = len(val_lines)
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     # 定义损失函数
