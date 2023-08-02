@@ -19,7 +19,11 @@ class MedicalDataSet(Dataset):
         :param dataset_path: 数据集的根路径
         """
         super(MedicalDataSet, self).__init__()
+
+        ## name ?
         self.names = names
+
+        ## annotation 
         self.length = len(self.annotation_lines)  # 数据集的图像总数
         self.input_shape = input_shape
         self.num_classes = num_classes

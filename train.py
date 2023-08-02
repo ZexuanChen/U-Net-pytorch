@@ -8,16 +8,23 @@ import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.optim as optim
 from torch.utils.data import DataLoader
+import unet
+import dataloader
 
 load = bool(False)
 dataset_path=''
 num_epochs=30
 device="cpu"
-
+shuffle=bool(True)
 
 
 if __name__ == "__main__":
-    model = Unet().train()
+
+    # out_chanels填什么？
+    model = unet.UNet(3,2).train()
+    #name 是什么？ path
+    dataset=dataloader.MedicalDataSet("",(512,512),2,bool(True),"")
+    train_loader=DataLoader(dataset,batch_size=1,shuffle=shuffle)
 
     # 预训练模块
     # 源代码如果不预训练会进行权重初始分配
