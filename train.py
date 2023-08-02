@@ -54,6 +54,7 @@ if __name__ == "__main__":
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
+            print(f"running Loss: {running_loss:.4f}")
 
         epoch_loss = running_loss / len(train_loader)
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}")

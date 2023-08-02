@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 # 1-5层的通道数
 filters = [64, 128, 256, 512, 1024]
 
@@ -79,10 +80,10 @@ class UNet(nn.Module):
             x = self.decoder[idx + 1](x)                     # 进行一次双卷积，通道数减少
             #print(x.shape)
 
-        return self.out(x)                                   # 输出
+        return self.out(x).permute(0,2,3,1)                                  # 输出
 
 
-#测试
+#  测试
 # model = UNet(in_channels=3, out_channels=2)
 # print(model)
 #

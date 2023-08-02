@@ -59,7 +59,7 @@ class MedicalDataSet(Dataset):
         seg_image[seg_image == 255] = 1
         seg_image = np.eye(self.num_classes + 1)[seg_image.reshape([-1])]  # 得到对应的one-hot编码，shape=(w*h, num_classes+1)
         seg_image = seg_image.reshape((int(self.input_shape[0]), int(self.input_shape[1]), self.num_classes + 1))  # shape=(h, w, num_classes+1)
-        seg_image = torch.LongTensor(seg_image)  # 转为tensor
+        seg_image = torch.FloatTensor(seg_image)  # 转为tensor
 
         return input_image, seg_image
 
