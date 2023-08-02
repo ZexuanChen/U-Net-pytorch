@@ -8,28 +8,36 @@ import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.optim as optim
 from torch.utils.data import DataLoader
+import unet
+import dataloader
 
 load = bool(False)
 dataset_path=''
 num_epochs=30
 device="cpu"
-
-
+shuffle=bool(True)
+path="GlandCeildata/train"
 
 if __name__ == "__main__":
-    model = Unet().train()
+
+    # out_chanels填什么？
+    model = unet.UNet(3,2).train()
+    #name 是什么？ path
+    annotation=[str(i) for i in range(160)]
+    dataset=dataloader.MedicalDataSet(annotation,(512,512),1,bool(True),path)
+    train_loader=DataLoader(dataset,batch_size=1,shuffle=shuffle)
 
     # 预训练模块
     # 源代码如果不预训练会进行权重初始分配
     if load:
         model = torch.load('model.pth')
 
-    with open(os.path.join(dataset_path, "ImageSets/Segmentation/train.txt"),"r") as f:
-        train_lines = f.readlines()
-    with open(os.path.join(dataset_path, "ImageSets/Segmentation/val.txt"),"r") as f:
-        val_lines = f.readlines()
-    num_train   = len(train_lines)
-    num_val     = len(val_lines)
+    # with open(os.path.join(dataset_path, "ImageSets/Segmentation/train.txt"),"r") as f:
+    #     train_lines = f.readlines()
+    # with open(os.path.join(dataset_path, "ImageSets/Segmentation/val.txt"),"r") as f:
+    #     val_lines = f.readlines()
+    # num_train   = len(train_lines)
+    # num_val     = len(val_lines)
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     # 定义损失函数
@@ -46,6 +54,7 @@ if __name__ == "__main__":
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
+            print(f"running Loss: {running_loss:.4f}")
 
         epoch_loss = running_loss / len(train_loader)
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}")
