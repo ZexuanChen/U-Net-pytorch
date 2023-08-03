@@ -12,7 +12,7 @@ class MedicalDataSet(Dataset):
     def __init__(self, annotation, input_shape, num_classes, train, dataset_path):
         """
         初始化数据集的基本信息
-        :param names: 除去后缀的图像名称列表，如图片名为1.jpg，列表中的值就是1，也可以看成是图像的编号
+        :param annotation: 标注用来训练的图像的名称，为除去后缀的图像名称列表，如图片名为1.jpg，列表中的值就是1，也可以看成是图像的编号
         :param input_shape: 输入到网络中的图像尺寸
         :param num_classes: 类别数目（包含背景）
         :param train: 一个bool值，训练集还是测试集，True表示训练集
@@ -20,7 +20,6 @@ class MedicalDataSet(Dataset):
         """
         super(MedicalDataSet, self).__init__()
 
-        ## 删除了name 增加了annotation
         self.annotations=annotation
         self.length = len(self.annotations)  # 数据集的图像总数
         self.input_shape = input_shape
@@ -43,7 +42,9 @@ class MedicalDataSet(Dataset):
         """
         name = self.annotations[index].strip()
         # 读取图像
+        # dataset_path/Image/1.bmp
         input_image = Image.open(os.path.join(os.path.join(self.dataset_path, "Image"), name + ".bmp"))  # 原始图像
+        # dataset_path/Mask/1.bmp
         pre_seg_image = Image.open(os.path.join(os.path.join(self.dataset_path, "Mask"), name + ".bmp"))  # 原始标注图像，只有纯黑色和纯白色，0和255
 
         input_image, pre_seg_image = augment(input_image, pre_seg_image, (512,512),work=bool(True))  # 数据增强
@@ -60,7 +61,7 @@ class MedicalDataSet(Dataset):
         # 经过 augment 后弹性形变后像素值会出现除了255以外的其他取值
 
         seg_image[seg_image >= 127.5] = 0   #本来像素接近 255 （白色）的部分标签作为 0
-        seg_image[seg_image <= 127.5] = 1   #本来像素接近 0 （黑色）的部分标签为 1 ，即需要切割的部分
+        seg_image[seg_image < 127.5] = 1   #本来像素接近 0 （黑色）的部分标签为 1 ，即需要切割的部分
 
         seg_image = np.eye(self.num_classes + 1)[seg_image.reshape([-1])]  # 得到对应的one-hot编码，shape=(w*h, num_classes+1)
         seg_image = seg_image.reshape((int(self.input_shape[0]), int(self.input_shape[1]), self.num_classes + 1))  # shape=(h, w, num_classes+1)
