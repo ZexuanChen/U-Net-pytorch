@@ -46,7 +46,7 @@ class MedicalDataSet(Dataset):
         input_image = Image.open(os.path.join(os.path.join(self.dataset_path, "Image"), name + ".bmp"))  # 原始图像
         pre_seg_image = Image.open(os.path.join(os.path.join(self.dataset_path, "Mask"), name + ".bmp"))  # 原始标注图像，只有纯黑色和纯白色，0和255
 
-        input_image, pre_seg_image = augment(input_image, pre_seg_image, (512,512),work=bool(False))  # 数据增强
+        input_image, pre_seg_image = augment(input_image, pre_seg_image, (512,512),work=bool(True))  # 数据增强
 
         input_image = np.array(input_image, dtype=np.float64) / 255  # 归一化到[0, 1]
         input_image = np.transpose(input_image, [2, 0, 1])  # 通道数挪到最前面
@@ -56,7 +56,12 @@ class MedicalDataSet(Dataset):
         #seg_image[pre_seg_image <= 127.5] = 1  # 把像素值小于等于127.5（255的一半）的点设置为需要分割的类别，编号为1
 
         seg_image=np.array(pre_seg_image)
-        seg_image[seg_image == 255] = 1
+        # 灰度图片中 0 接近黑色即为要切割的部分， 255 接近白色代表其他部分
+        # 经过 augment 后弹性形变后像素值会出现除了255以外的其他取值
+
+        seg_image[seg_image >= 127.5] = 0   #本来像素接近 255 （白色）的部分标签作为 0
+        seg_image[seg_image <= 127.5] = 1   #本来像素接近 0 （黑色）的部分标签为 1 ，即需要切割的部分
+
         seg_image = np.eye(self.num_classes + 1)[seg_image.reshape([-1])]  # 得到对应的one-hot编码，shape=(w*h, num_classes+1)
         seg_image = seg_image.reshape((int(self.input_shape[0]), int(self.input_shape[1]), self.num_classes + 1))  # shape=(h, w, num_classes+1)
         seg_image = torch.FloatTensor(seg_image)  # 转为tensor
@@ -76,6 +81,7 @@ def augment(image, label, input_shape, hue=.3, sat=.5, val=.5, work=True):
     :return:
     """
     image = image.convert('RGB')  # 换成RGB三通道
+    label = label.convert('L')
     h, w = input_shape
 
     # 不进行数据增强，验证集和测试集都不进行数据增强，进行不失真的resize，然后直接返回
@@ -106,9 +112,25 @@ def augment(image, label, input_shape, hue=.3, sat=.5, val=.5, work=True):
     image = T.ElasticTransform()(image)
     label = T.ElasticTransform()(label)
     # 颜色抖动
-    h = random.randint(-hue, hue)
-    s = random.randint(max(0, 1-sat), 1+sat)
-    v = random.randint(max(0, 1-val), 1+val)
+    # # 得到一个3维数组 r 表示随机权值
+    # r = np.random.uniform(-1, 1, 3) * [hue, sat, val] + 1
+    # # 得到h s v 三通道的image 矩阵
+    # hue, sat, val = cv2.split(cv2.cvtColor(image, cv2.COLOR_RGB2HSV))
+    # # 记录type
+    # dtype = image.dtype
+    # # 得到一个 x 为从0到255的数组
+    # x = np.arange(0, 256, dtype=r.dtype)
+    # # 得到一个hsv的查找表
+    # lut_hue = ((x * r[0]) % 180).astype(dtype)
+    # lut_sat = np.clip(x * r[1], 0, 255).astype(dtype)
+    # lut_val = np.clip(x * r[2], 0, 255).astype(dtype)
+
+
+    # 修改了hsv获得方式
+    h = random.uniform(-hue, hue)
+    s = random.uniform(max(float(0), 1-sat), 1+sat)
+    v = random.uniform(max(float(0), 1-val), 1+val)
+
     image = F.adjust_hue(image, h)
     image = F.adjust_saturation(image, s)
     image = F.adjust_brightness(image, v)
