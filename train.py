@@ -10,6 +10,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import unet
 import dataloader
+import time
 
 load = bool(False)
 dataset_path=''
@@ -54,10 +55,16 @@ if __name__ == "__main__":
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
-            print(f"running Loss: {running_loss:.4f}")
+            print(f"Loss: {loss.item():.4f}")
 
         epoch_loss = running_loss / len(train_loader)
+        # 生成带有当前时间的文件名
+        current_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
+        file_name = f"model/model_{current_time}.pth"
+        # 保存模型(每一个epoch都会记录一次)
+        torch.save(model.state_dict(), file_name)
+
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}")
 
-    # 保存模型
+    # 保存模型（最终模型）
     torch.save(model.state_dict(), "your_model.pth")
