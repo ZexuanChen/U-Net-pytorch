@@ -2,11 +2,7 @@ import torch
 import copy
 import numpy as np
 from PIL import Image
-import torch.nn.functional as F
 
-import unet
-from unet import UNet
-import cv2
 
 input_shape = [512, 512]
 num_classes = 2
