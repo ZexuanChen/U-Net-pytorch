@@ -41,8 +41,19 @@ if __name__ == "__main__":
     # num_val     = len(val_lines)
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+
+    def dice_loss(outputs, targets):
+        smooth = 1e-5
+        numerator = 2.0 * torch.sum(outputs * targets)
+        denominator = torch.sum(outputs + targets)
+        dice = (numerator + smooth) / (denominator + smooth)
+        return (1 - dice) * 10000
+
     # 定义损失函数
-    criterion = nn.CrossEntropyLoss().to(device)
+    criterion = dice_loss
+
+    # criterion = nn.CrossEntropyLoss().to(device)
 
     for epoch in range(num_epochs):
         running_loss = 0.0
