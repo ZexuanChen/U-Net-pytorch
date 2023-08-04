@@ -80,7 +80,7 @@ class UNet(nn.Module):
             x = self.decoder[idx + 1](x)                     # 进行一次双卷积，通道数减少
             #print(x.shape)
 
-        return self.out(x).permute(0,2,3,1)                                  # 输出
+        return torch.softmax(self.out(x).permute(0, 2, 3, 1), dim=-1)                                # 输出
 
 
 #  测试
