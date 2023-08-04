@@ -10,7 +10,7 @@ import cv2
 
 input_shape = [512, 512]
 num_classes = 2
-colors = [(0, 0, 0), (255, 255, 255), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128), (0, 128, 128),
+colors = [(255, 255, 255), (0, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128), (0, 128, 128),
           (128, 128, 128), (64, 0, 0), (192, 0, 0), (64, 128, 0), (192, 128, 0), (64, 0, 128), (192, 0, 128),
           (64, 128, 128), (192, 128, 128), (0, 64, 0), (128, 64, 0), (0, 192, 0), (128, 192, 0), (0, 64, 128),
           (128, 64, 12)]
@@ -44,7 +44,7 @@ def detect_image(image, count=False, name_classes=None):
         # 创建一个与原始模型结构相同的实例
         net = unet.UNet(in_channels=3, out_channels=2)
         # 加载模型的状态字典
-        net.load_state_dict(torch.load("model/model_20230803121047.pth"))
+        net.load_state_dict(torch.load("model/model_20230804100826.pth", map_location=torch.device('cpu')))
         # 将模型设置为评估模式（推理模式）
         net.eval()
         pr = net(images)[0]
