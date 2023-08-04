@@ -22,7 +22,7 @@ path="GlandCeildata/train"
 if __name__ == "__main__":
 
     # out_chanels填什么？
-    model = unet.UNet(3,2).train()
+    model = unet.UNet(3,2).train().to(device)
     #name 是什么？ path
     annotation=[str(i) for i in range(160)]
     dataset=dataloader.MedicalDataSet(annotation,(512,512),1,bool(True),path)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     # 定义损失函数
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss().to(device)
 
     for epoch in range(num_epochs):
         running_loss = 0.0

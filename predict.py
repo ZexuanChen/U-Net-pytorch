@@ -44,7 +44,7 @@ def detect_image(image, count=False, name_classes=None):
         # 创建一个与原始模型结构相同的实例
         net = unet.UNet(in_channels=3, out_channels=2)
         # 加载模型的状态字典
-        net.load_state_dict(torch.load("model/model_20230803121047.pth"))
+        net.load_state_dict(torch.load("model/model_20230804100826.pth", map_location=torch.device('cpu')))
         # 将模型设置为评估模式（推理模式）
         net.eval()
         pr = net(images)[0]
