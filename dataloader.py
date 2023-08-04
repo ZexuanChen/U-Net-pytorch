@@ -59,10 +59,8 @@ class MedicalDataSet(Dataset):
         # 灰度图片中 0 接近黑色即为要切割的部分， 255 接近白色代表其他部分
         # 经过 augment 后弹性形变后像素值会出现除了255以外的其他取值
 
-# BUG:之前先让大于127.5变成0，再让小于的变成1  ------>    导致所有像素都是1了！！！！
-        seg_image[seg_image <= 127.5] = 1  # 本来像素接近 0 （黑色）的部分标签为 1 ，即需要切割的部分
         seg_image[seg_image >= 127.5] = 0   #本来像素接近 255 （白色）的部分标签作为 0
-
+        seg_image[seg_image <= 127.5] = 1   #本来像素接近 0 （黑色）的部分标签为 1 ，即需要切割的部分
 
         seg_image = np.eye(self.num_classes + 1)[seg_image.reshape([-1])]  # 得到对应的one-hot编码，shape=(w*h, num_classes+1)
         seg_image = seg_image.reshape((int(self.input_shape[0]), int(self.input_shape[1]), self.num_classes + 1))  # shape=(h, w, num_classes+1)
