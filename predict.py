@@ -3,7 +3,8 @@ import copy
 import numpy as np
 from PIL import Image
 import torch.nn.functional as F
-
+import dataloader
+from miou import compute_iou
 import unet
 from unet import UNet
 import cv2
@@ -15,7 +16,7 @@ colors = [(255, 255, 255), (0, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (
           (64, 128, 128), (192, 128, 128), (0, 64, 0), (128, 64, 0), (0, 192, 0), (128, 192, 0), (0, 64, 128),
           (128, 64, 12)]
 
-def detect_image(image, count=False, name_classes=None):
+def detect_image(image, count=False, name_classes=None,miou=False):
     # ---------------------------------------------------#
     #   对输入图像进行一个备份，后面用于绘图
     # ---------------------------------------------------#
@@ -44,7 +45,7 @@ def detect_image(image, count=False, name_classes=None):
         # 创建一个与原始模型结构相同的实例
         net = unet.UNet(in_channels=3, out_channels=2)
         # 加载模型的状态字典
-        net.load_state_dict(torch.load("model/model_20230804100826.pth", map_location=torch.device('cpu')))
+        net.load_state_dict(torch.load("model/model_dice_99.pth", map_location=torch.device('cpu')))
         # 将模型设置为评估模式（推理模式）
         net.eval()
         pr = net(images)[0]
@@ -99,6 +100,16 @@ def detect_image(image, count=False, name_classes=None):
     # ------------------------------------------------#
     # image = Image.blend(old_img, image, 0.7)
 
+    if miou:
+        true_image=input("True Mask filename:")
+        true_image=Image.open(true_image)
+        _,true_label=dataloader.augment(image,true_image,(512,512),work=False)
+        true_label=np.array(true_label)
+        true_label[true_label <= 127.5] = 1  # 本来像素接近 0 （黑色）的部分标签为 1 ，即需要切割的部分
+        true_label[true_label >= 127.5] = 0  # 本来像素接近 255 （白色）的部分标签作为 0
+        miou=compute_iou(pr,true_label,2)
+        print(f"miou:{miou}")
+
     return image
 
 #---------------------------------------------------#
@@ -133,5 +144,5 @@ if __name__ == "__main__" :
             print('Open Error! Try again!')
             continue
         else:
-            r_image = detect_image(image, count=False, name_classes=None)
+            r_image = detect_image(image, count=False, name_classes=None,miou=True)
             r_image.show()

@@ -1,6 +1,5 @@
 import os
 import datetime
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -12,12 +11,13 @@ import unet
 import dataloader
 import time
 
-load = bool(False)
+load = bool(True)
 dataset_path=''
 num_epochs=30
 device="cpu"
 shuffle=bool(True)
 path="GlandCeildata/train"
+origin_model="model/model_dice_99.pth"
 
 if __name__ == "__main__":
 
@@ -31,7 +31,13 @@ if __name__ == "__main__":
     # 预训练模块
     # 源代码如果不预训练会进行权重初始分配
     if load:
-        model = torch.load('model.pth')
+        # 创建一个与原始模型结构相同的实例
+        model = unet.UNet(in_channels=3, out_channels=2)
+        # 加载模型的状态字典
+        model.load_state_dict(torch.load(origin_model, map_location=torch.device(device)))
+        # Step 2: 将模型参数转换到CPU上
+        model.to(device)
+
 
     # with open(os.path.join(dataset_path, "ImageSets/Segmentation/train.txt"),"r") as f:
     #     train_lines = f.readlines()
@@ -70,12 +76,13 @@ if __name__ == "__main__":
 
         epoch_loss = running_loss / len(train_loader)
         # 生成带有当前时间的文件名
-        current_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
-        file_name = f"model/model_{current_time}.pth"
+        # current_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
+        if load:
+            file_name = f"model/model_conti_{origin_model.split('.')[0]}_{epoch}.pth"
+        else :
+            file_name=f"model/model_ini_{epoch}.pth"
         # 保存模型(每一个epoch都会记录一次)
         torch.save(model.state_dict(), file_name)
 
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}")
 
-    # 保存模型（最终模型）
-    torch.save(model.state_dict(), "your_model.pth")
